@@ -107,14 +107,11 @@ class ChatServer {
           }
           else if(incomingIPAddress.equals(firstIPAddress)){//using the incoming IP address to know which client to send the message to 
             sendPacket = new DatagramPacket(sendData, sendData.length, secondIPAddress, secondPort);
-            serverSocket.send(sendPacket);
-            isFirst=false;
           }
           else{
             sendPacket = new DatagramPacket(sendData, sendData.length, firstIPAddress, firstPort);
-            serverSocket.send(sendPacket);
-            isFirst=true;
           }
+          serverSocket.send(sendPacket);
         }
 
         serverSocket.close();
