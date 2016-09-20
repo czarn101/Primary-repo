@@ -30,7 +30,7 @@ class ChatServer {
         DatagramPacket sendPacket = null;
         InetAddress firstIPAddress = null;
         InetAddress secondIPAddress = null;
-        InetAddress incomingIPAddres= null;
+        InetAddress incomingIPAddress= null;
         int firstPort = 0;
         int secondPort = 0;
         String sentence = "";
