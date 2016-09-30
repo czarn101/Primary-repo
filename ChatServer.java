@@ -16,43 +16,37 @@ class ChatServer {
     public static void main(String args[]) throws Exception {
 
         DatagramSocket serverSocket = null;
-
         try {
             serverSocket = new DatagramSocket(9876);
         } catch (Exception e) {
             System.out.println("Failed to open UDP socket");
             System.exit(0);
         }
-
-        byte[] receiveData = null;
-        byte[] sendData = null;
-        DatagramPacket receivePacket = null;
-        DatagramPacket sendPacket = null;
-        InetAddress firstIPAddress = null;
-        InetAddress secondIPAddress = null;
-        InetAddress incomingIPAddress= null;
-        int firstPort = 0;
-        int secondPort = 0;
+		
+		
+		//Declaring all the variables to be used in the program and initiating them with default values
+        byte[] receiveData = null, sendData = null;
+        DatagramPacket receivePacket = null, sendPacket = null;
+        InetAddress firstIPAddress = null, secondIPAddress = null, incomingIPAddress= null;
+        int firstPort = 0, secondPort = 0, incomingPort= 0;
         String sentence = "";
         boolean isFirst = false;
 
-
-        while (!isFirst) {//waiting for the first client
+		//STAGE 1: GETTING THE FIRST CLIENT
+        while (!isFirst) {//will loop until first client said "HELLO Red/Blue"
             receiveData = new byte[1024];
             sendData = new byte[1024];
             receivePacket = new DatagramPacket(receiveData, receiveData.length);
             serverSocket.receive(receivePacket);
-
             sentence = new String(receivePacket.getData());
-
             firstIPAddress = receivePacket.getAddress();
             firstPort = receivePacket.getPort();
-            //will keep looping until the input is "HELLO Red" or "HELLO Blue"
-            if ((sentence.length() >= 9 && sentence.substring(0,9).equals("HELLO Red"))||(sentence.length() >= 10 && sentence.substring(0, 10).equals("HELLO Blue"))){
+			
+            if ((sentence.trim().equals("HELLO Red"))||(sentence.trim().equals("HELLO Blue"))){
                 sentence = "100";
                 isFirst=true;
             }
-            else
+            else// gives out error message if anything other than "HELLO Red/Blue" is received
                 sentence="300 Command not recognized";
 
             sendData = sentence.getBytes();
@@ -60,44 +54,43 @@ class ChatServer {
             serverSocket.send(sendPacket);
         }
 
-
-        while (isFirst) {//wating for the second client
+		//STAGE 2: GETTING THE SECOND CLIENT
+        while (isFirst) {//will loop until second client make contact with "HELLO Red/Blue"
             receiveData = new byte[1024];
             sendData = new byte[1024];
             receivePacket = new DatagramPacket(receiveData, receiveData.length);
             serverSocket.receive(receivePacket);
-
             sentence = new String(receivePacket.getData());
-
             secondIPAddress = receivePacket.getAddress();
             secondPort = receivePacket.getPort();
 
-            if ((sentence.length() >= 9 && sentence.substring(0,9).equals("HELLO Red"))||(sentence.length() >= 10 && sentence.substring(0, 10).equals("HELLO Blue"))){
+            if ((sentence.trim().equals("HELLO Red"))||(sentence.trim().equals("HELLO Blue"))){
                 sentence = "200";
                 isFirst=false;
             }
-            else
+            else// gives out error message if anything other than "HELLO Red/Blue" is received
                 sentence="300 Command not recognized";
-            //wil send "200" to second client
+				
             sendData = sentence.getBytes();
             sendPacket = new DatagramPacket(sendData, sendData.length, secondIPAddress, secondPort);
-            serverSocket.send(sendPacket);
+            serverSocket.send(sendPacket);//sending "200" or an error message to second client
         }
         isFirst=true;
         sendPacket = new DatagramPacket(sendData, sendData.length, firstIPAddress, firstPort);
         serverSocket.send(sendPacket);//sending "200" to first client
 
-
+		//STAGE 3: STARTING CHAT BETWEEN TWO CLIENTS
         while(true){
           receiveData = new byte[1024];
           sendData = new byte[1024];
           receivePacket = new DatagramPacket(receiveData, receiveData.length);
           serverSocket.receive(receivePacket);
           incomingIPAddress=receivePacket.getAddress();
+		  incomingPort= receivePacket.getPort();
           sentence = new String(receivePacket.getData());
           sendData = sentence.getBytes();
 
-          if(sentence.length()>=7 && sentence.substring(0,7).equals("Goodbye")){//will end the loop if the sentence is "Goodbye"
+          if(sentence.trim().equals("Goodbye")){//will end the loop if the sentence is "Goodbye"
             sentence="Goodbye";
             sendPacket = new DatagramPacket(sendData, sendData.length, secondIPAddress, secondPort);
             serverSocket.send(sendPacket);
@@ -105,7 +98,7 @@ class ChatServer {
             serverSocket.send(sendPacket);
             break;
           }
-          else if(incomingIPAddress.equals(firstIPAddress)){//using the incoming IP address to know which client to send the message to 
+          else if(incomingIPAddress.equals(firstIPAddress)&& incomingPort==firstPort){//using the incoming IP address and port to know which client to direct the message to 
             sendPacket = new DatagramPacket(sendData, sendData.length, secondIPAddress, secondPort);
           }
           else{
